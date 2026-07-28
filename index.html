@@ -1,0 +1,321 @@
+<!DOCTYPE html><html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PNE — POSM theo chương trình</title>
+<style>
+:root{color-scheme:light;
+ --ink:#14171d;--mut:#697080;--fai:#9aa1ad;--ln:#e5e8ec;--bl:#2258e0;--bg:#f4f5f8;
+ --sh:0 1px 2px rgba(20,26,38,.05),0 1px 3px rgba(20,26,38,.04)}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-size:14.5px;line-height:1.55;
+ -webkit-font-smoothing:antialiased;
+ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Arial,sans-serif}
+button{font:inherit}
+
+/* ---------- top bar ---------- */
+.top{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.82);
+ backdrop-filter:saturate(180%) blur(16px);-webkit-backdrop-filter:saturate(180%) blur(16px);
+ border-bottom:1px solid var(--ln)}
+.tin{max-width:1120px;margin:0 auto;padding:10px 22px;display:flex;align-items:center;gap:14px}
+.brand{font-size:14.5px;font-weight:680;letter-spacing:-.3px;white-space:nowrap;
+ display:flex;align-items:center;gap:8px;color:var(--ink);text-decoration:none}
+.brand i{width:16px;height:16px;border-radius:5px;display:block;
+ background:linear-gradient(135deg,#2258e0,#5b8dfa)}
+.nav{display:flex;gap:2px}
+.nav button{font-size:13px;font-weight:550;padding:6px 12px;border:none;border-radius:8px;
+ background:none;color:var(--mut);cursor:pointer;white-space:nowrap;transition:.14s}
+.nav button:hover{background:#edeff3;color:var(--ink)}
+.nav button.on{background:var(--ink);color:#fff}
+.srch{margin-left:auto;position:relative;flex:0 1 246px}
+.srch>svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none}
+.srch input{width:100%;font-size:13px;padding:8px 30px 8px 32px;border:1px solid var(--ln);
+ border-radius:9px;background:#fff;color:var(--ink);outline:none;transition:.14s}
+.srch input:focus{border-color:var(--bl);box-shadow:0 0 0 3px rgba(34,88,224,.1)}
+.srch input::placeholder{color:#aeb4bf}
+.kbd{position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:10.5px;color:#bcc2cb;
+ border:1px solid #e8ebef;border-radius:4px;padding:1px 5px;background:#fafbfc}
+.srch input:focus~.kbd{opacity:0}
+@media(max-width:820px){.tin{flex-wrap:wrap;gap:9px}.srch{flex:1 1 100%;order:3;margin-left:0}
+ .nav{order:2;margin-left:auto}.nav button{padding:5px 10px;font-size:12.5px}}
+
+.w{max-width:1120px;margin:0 auto;padding:28px 22px 90px}
+h1{font-size:24px;margin:0 0 5px;letter-spacing:-.5px;font-weight:690}
+.lead{color:var(--mut);font-size:13.5px;margin:0 0 22px}
+.lead a{color:var(--bl);text-decoration:none;font-weight:550}
+.lead a:hover{text-decoration:underline}
+h2{font-size:11.5px;text-transform:uppercase;letter-spacing:.9px;color:var(--fai);font-weight:700;
+ margin:40px 0 15px;padding-bottom:9px;border-bottom:1px solid var(--ln);scroll-margin-top:66px}
+
+/* ---------- tally ---------- */
+.tally{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:11px;margin-bottom:18px}
+.tl{background:#fff;border:1px solid var(--ln);border-radius:13px;padding:14px 17px;box-shadow:var(--sh)}
+.tl b{display:block;font-size:27px;font-weight:680;letter-spacing:-1px;line-height:1.1}
+.tl span{font-size:12.5px;color:var(--mut)}
+.tl.g b{color:#15a34a} .tl.o b{color:#e8590c}
+
+/* ---------- controls ---------- */
+.ctrl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:16px}
+.chip{font-size:12.5px;font-weight:530;padding:6px 13px;border:1px solid var(--ln);border-radius:20px;
+ background:#fff;color:var(--mut);cursor:pointer;transition:.14s;box-shadow:var(--sh)}
+.chip:hover{border-color:#cdd3db;color:var(--ink)}
+.chip.on{background:#fff4ec;border-color:#f9b98a;color:#c2410c}
+.sortw{margin-left:auto;display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--fai)}
+select{font:inherit;font-size:12.5px;padding:6px 10px;border:1px solid var(--ln);border-radius:9px;
+ background:#fff;color:var(--ink);outline:none;cursor:pointer;box-shadow:var(--sh)}
+select:focus{border-color:var(--bl)}
+.cnt{font-size:12.5px;color:var(--fai)}
+
+/* ---------- cards ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(430px,1fr));gap:15px}
+@media(max-width:520px){.grid{grid-template-columns:1fr}}
+.ct{background:#fff;border:1px solid var(--ln);border-radius:15px;padding:16px 18px 14px;
+ box-shadow:var(--sh);transition:box-shadow .18s,transform .18s}
+.ct:hover{box-shadow:0 3px 8px rgba(20,26,38,.06),0 10px 26px rgba(20,26,38,.06)}
+.ct.warnc{border-top:2.5px solid #fdba74}
+.ct.hide,.hwrap.hide{display:none}
+.ct header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:13px}
+.ct h3{font-size:15.5px;margin:0;font-weight:665;letter-spacing:-.25px;line-height:1.3;
+ display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.tag{font-size:9.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#8a6d00;
+ background:#fef3c7;border-radius:20px;padding:2px 7px}
+.mkt{font-size:10.5px;color:var(--fai);text-transform:uppercase;letter-spacing:.6px;font-weight:650}
+.pill{font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap;letter-spacing:.2px}
+.pill.ok{background:#e9f9ef;color:#15803d} .pill.warn{background:#fff1e6;color:#c2410c}
+
+/* ---------- tiles ---------- */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:11px}
+.tile{min-width:0}
+.th{display:block;position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden;
+ background:#f1f3f6;border:1px solid var(--ln);text-decoration:none;color:var(--fai)}
+.th img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease}
+.th:hover img{transform:scale(1.045)}
+.th .ph{display:none;position:absolute;left:50%;top:50%;width:26px;height:26px;
+ transform:translate(-50%,-50%);opacity:.5}
+.th.noimg .ph,.th.miss .ph{display:block}
+.th.miss{border:1px dashed #d5dae1;background:#fbfcfd;color:#c3c9d2}
+.bdg{position:absolute;left:6px;top:6px;font-size:9px;font-weight:700;letter-spacing:.4px;
+ text-transform:uppercase;background:rgba(20,26,38,.72);color:#fff;padding:2.5px 6px;border-radius:5px;
+ backdrop-filter:blur(4px)}
+.bdg.out{background:#eef0f4;color:#a7aeb9}
+.ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+ background:rgba(20,32,58,.42);color:#fff;font-size:12px;font-weight:650;opacity:0;transition:.18s}
+.th:hover .ov{opacity:1}
+.ti{padding:7px 1px 0}
+.tlb{display:flex;align-items:center;justify-content:space-between;gap:5px;
+ font-size:12px;font-weight:620;line-height:1.35}
+.cp{width:21px;height:21px;flex:0 0 21px;border:none;border-radius:6px;background:#f1f3f6;
+ color:#8b929e;cursor:pointer;padding:0;display:grid;place-items:center;transition:.14s}
+.cp svg{width:11px;height:11px}
+.cp:hover{background:var(--bl);color:#fff}
+.cp.done{background:#15a34a;color:#fff}
+.fn{font-size:10.5px;color:var(--fai);margin-top:2px;line-height:1.4;
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fn.miss2{color:#c3c9d2;font-style:italic}
+.tm{display:flex;align-items:center;gap:6px;margin-top:5px}
+.dtx{font-size:10.5px;color:#b3b9c3}
+.tex{font-size:10.5px;color:#a0791f;background:#fefce8;border-radius:5px;padding:2px 6px;margin-top:5px;
+ line-height:1.4}
+.ag{font-size:10px;font-weight:700;border-radius:5px;padding:2px 6px;white-space:nowrap;letter-spacing:.1px}
+.ag.r3{background:#fdeaea;color:#dc2626} .ag.r2{background:#fdf0e4;color:#e8590c}
+.ag.r1{background:#fbf5da;color:#a16207} .ag.ok{background:#e9f9ef;color:#15a34a}
+.ag.unk{background:#f1f3f6;color:#a7aeb9}
+.note{font-size:11.5px;color:var(--fai);margin:12px 0 0;padding-top:11px;
+ border-top:1px solid #f2f4f6;line-height:1.5}
+
+.hgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:14px;
+ background:#fff;border:1px solid var(--ln);border-radius:15px;padding:17px 19px;box-shadow:var(--sh)}
+#none{display:none;background:#fff;border:1px dashed #d6dae0;border-radius:15px;padding:42px;
+ text-align:center;color:var(--fai);font-size:13.5px}
+.foot{margin-top:32px;font-size:12px;color:var(--fai);line-height:1.85}
+#toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,14px);background:#14171d;color:#fff;
+ font-size:13px;font-weight:550;padding:10px 18px;border-radius:11px;opacity:0;pointer-events:none;
+ transition:.22s cubic-bezier(.4,0,.2,1);z-index:60;box-shadow:0 8px 28px rgba(0,0,0,.22);max-width:86vw}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+</style></head><body>
+
+<div class="top"><div class="tin">
+ <a class="brand" href="#"><i></i>PNE · POSM</a>
+ <nav class="nav">
+  <button class="on" data-f="">Tất cả</button>
+  <button data-f="Đức">Đức</button>
+  <button data-f="Áo">Áo</button>
+  <button data-f="Khác">Khác</button>
+  <button data-go="hsnl">Hồ sơ năng lực</button>
+ </nav>
+ <div class="srch">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#aeb4bf" stroke-width="2.4"
+   stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+  <input id="q" type="text" placeholder="Tìm chương trình hoặc tên file…" autocomplete="off">
+  <span class="kbd">/</span>
+ </div>
+</div></div>
+
+<div class="w">
+<h1>POSM theo chương trình</h1>
+<p class="lead">Mỗi chương trình cần một <b>file in</b> (flyer hoặc brochure) và một <b>standee</b>.
+ Bấm ảnh để mở trên Drive, bấm biểu tượng bên phải nhãn để sao chép link.
+ <a href="https://docs.google.com/spreadsheets/d/1c9ON5K1D-_VvtLzBUmbycuv3dfbcRtfLwRMO4TGIdZ8/edit" target="_blank">Mở Google Sheet ↗</a></p>
+
+<div class="tally">
+ <div class="tl"><b>8</b><span>chương trình</span></div>
+ <div class="tl g"><b>2</b><span>đủ file in + standee</span></div>
+ <div class="tl o"><b>6</b><span>thiếu standee</span></div>
+ <div class="tl g"><b>18</b><span>file mở được bằng link</span></div>
+</div>
+
+<div class="ctrl">
+ <button class="chip" id="f-std">Chỉ cái thiếu standee</button>
+ <button class="chip" id="f-old">Chỉ file trên 3 năm</button>
+ <span class="cnt" id="cnt"></span>
+ <span class="sortw">Sắp xếp
+  <select id="sort">
+   <option value="">Mặc định</option>
+   <option value="old">Cũ nhất trước</option>
+   <option value="new">Mới nhất trước</option>
+   <option value="name">Theo tên A→Z</option>
+  </select>
+ </span>
+</div>
+
+<div class="grid" id="grid"><article class="ct" data-mkt="Đức" data-q="duc du hoc nghe  ban ctv cu hon ban pne gan 3 nam. ban pne flyer-dhnd_11.12.25.pdf ban ctv pne_duhocngheduc (dt 0323).pdf standee standeedhndt6.2024.pdf du bo tren 3 nam"
+ data-old="39" data-name="du hoc nghe" data-std="1">
+ <header><div class="hl"><h3>Du học nghề</h3>
+ <span class="mkt">Đức</span></div>
+ <span class="pill ok">Đủ bộ</span></header>
+ <div class="tiles"><div class="tile"><a class="th" href="https://drive.google.com/file/d/1lVtUyVvPhj88P52PIqJPCKg2ggwzbp9u/view" target="_blank" rel="noopener" title="Flyer-DHND_11.12.25.pdf"><img src="https://drive.google.com/thumbnail?id=1lVtUyVvPhj88P52PIqJPCKg2ggwzbp9u&sz=w600" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg');this.remove()"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2h9l5 5v15H6z"/></svg><span class="bdg">Flyer</span><span class="ov">Mở ↗</span></a><div class="ti"><div class="tlb">Bản PNE<button class="cp" data-u="https://drive.google.com/file/d/1lVtUyVvPhj88P52PIqJPCKg2ggwzbp9u/view" data-n="Flyer-DHND_11.12.25.pdf" title="Sao chép link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg></button></div><div class="fn" title="Flyer-DHND_11.12.25.pdf">Flyer-DHND_11.12.25.pdf</div><div class="tm"><span class="ag ok">7 tháng</span><span class="dtx">11/12/2025</span></div></div></div><div class="tile"><a class="th" href="https://drive.google.com/file/d/1rRx4SKwZy04gD_sQg3fqJM43ruT0qIs4/view" target="_blank" rel="noopener" title="PNE_DUHOCNGHEDUC (DT 0323).pdf"><img src="https://drive.google.com/thumbnail?id=1rRx4SKwZy04gD_sQg3fqJM43ruT0qIs4&sz=w600" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg');this.remove()"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2h9l5 5v15H6z"/></svg><span class="bdg">Flyer</span><span class="ov">Mở ↗</span></a><div class="ti"><div class="tlb">Bản CTV<button class="cp" data-u="https://drive.google.com/file/d/1rRx4SKwZy04gD_sQg3fqJM43ruT0qIs4/view" data-n="PNE_DUHOCNGHEDUC (DT 0323).pdf" title="Sao chép link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg></button></div><div class="fn" title="PNE_DUHOCNGHEDUC (DT 0323).pdf">PNE_DUHOCNGHEDUC (DT 0323).pdf</div><div class="tm"><span class="ag r3">3.2 năm</span><span class="dtx">04/04/2023</span></div></div></div><div class="tile"><a class="th" href="https://drive.google.com/file/d/1bZu32Xl4FzrRiCKT9J2_3Xi8q6wJfExP/view" target="_blank" rel="noopener" title="StandeeDHNDT6.2024.pdf"><img src="https://drive.google.com/thumbnail?id=1bZu32Xl4FzrRiCKT9J2_3Xi8q6wJfExP&sz=w600" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg');this.remove()"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 2h6v16H9zM7 20h10"/></svg><span class="bdg">Standee</span><span class="ov">Mở ↗</span></a><div class="ti"><div class="tlb">Standee<button class="cp" data-u="https://drive.google.com/file/d/1bZu32Xl4FzrRiCKT9J2_3Xi8q6wJfExP/view" data-n="StandeeDHNDT6.2024.pdf" title="Sao chép link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg></button></div><div class="fn" title="StandeeDHNDT6.2024.pdf">StandeeDHNDT6.2024.pdf</div><div class="tm"><span class="ag r2">2.1 năm</span><span class="dtx">24/06/2024</span></div></div></div></div>
+ <p class="note">Bản CTV cũ hơn bản PNE gần 3 năm.</p>
+</article><article class="ct warnc" data-mkt="Đức" data-q="duc chuyen doi van bang   ban pne van bang duc_ 20.2.23.pdf ban ctv pne_chuyendoivanbangduc (dt 0323).pdf standee  thieu standee tren 3 nam"
+ data-old="41" data-name="chuyen doi van bang" data-std="0">
+ <header><div class="hl"><h3>Chuyển đổi văn bằng</h3>
+ <span class="mkt">Đức</span></div>
+ <span class="pill warn">Thiếu standee</span></header>
+ <div class="tiles"><div class="tile"><a class="th" href="https://drive.google.com/file/d/1CML0gRx_e435I-kW3czbEqqmbZhI7eWW/view" target="_blank" rel="noopener" title="Văn Bằng Đức_ 20.2.23.pdf"><img src="https://drive.google.com/thumbnail?id=1CML0gRx_e435I-kW3czbEqqmbZhI7eWW&sz=w600" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg');this.remove()"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2h9l5 5v15H6z"/></svg><span class="bdg">Flyer</span><span class="ov">Mở ↗</span></a><div class="ti"><div class="tlb">Bản PNE<button class="cp" data-u="https://drive.google.com/file/d/1CML0gRx_e435I-kW3czbEqqmbZhI7eWW/view" data-n="Văn Bằng Đức_ 20.2.23.pdf" title="Sao chép link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg></button></div><div class="fn" title="Văn Bằng Đức_ 20.2.23.pdf">Văn Bằng Đức_ 20.2.23.pdf</div><div class="tm"><span class="ag r3">3.4 năm</span><span class="dtx">20/02/2023</span></div></div></div><div class="tile"><a class="th" href="https://drive.google.com/file/d/1f_uaTjVJ0uqkRdYUT_Sh_gUz_39Hxttf/view" target="_blank" rel="noopener" title="PNE_CHUYENDOIVANBANGDUC (DT 0323).pdf"><img src="https://drive.google.com/thumbnail?id=1f_uaTjVJ0uqkRdYUT_Sh_gUz_39Hxttf&sz=w600" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg');this.remove()"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2h9l5 5v15H6z"/></svg><span class="bdg">Flyer</span><span class="ov">Mở ↗</span></a><div class="ti"><div class="tlb">Bản CTV<button class="cp" data-u="https://drive.google.com/file/d/1f_uaTjVJ0uqkRdYUT_Sh_gUz_39Hxttf/view" data-n="PNE_CHUYENDOIVANBANGDUC (DT 0323).pdf" title="Sao chép link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg></button></div><div class="fn" title="PNE_CHUYENDOIVANBANGDUC (DT 0323).pdf">PNE_CHUYENDOIVANBANGDUC (DT 0323).pdf</div><div class="tm"><span class="ag r3">3.2 năm</span><span class="dtx">22/05/2023</span></div></div></div><div class="tile isnone"><div class="th miss"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 2h6v16H9zM7 20h10"/></svg><span class="bdg out">Standee</span></div><div class="ti"><div class="tlb">Standee</div><div class="fn miss2">chưa có file</div><div class="tm"><span class="ag unk">—</span><span class="dtx"></span></div></div></div></div>
+ 
+</article><article class="ct warnc" data-mkt="Đức" data-q="duc chuyen doi bang van bang dieu duong  file in cu nhat toan danh muc. ban pne cbvb_dieuduong.pdf ban ctv ctv_cbvb_dieuduong.pdf standee  thieu standee tren 3 nam"
+ data-old="44" data-name="chuyen doi bang van bang dieu duong" data-std="0">
+ <header><div class="hl"><h3>Chuyển đổi bằng văn bằng Điều dưỡng</h3>
+ <span class="mkt">Đức</span></div>
+ <span class="pill warn">Thiếu standee</span></header>
+ <div class="tiles"><div class="tile"><a class="th" href="https://drive.google.com/file/d/1Qr2OTAqEJw68OW9Hotjea6t4IHqeBWWe/view" target="_blank" rel="noopener" title="CBVB_Dieuduong.pdf"><img src="https://drive.google.com/thumbnail?id=1Qr2OTAqEJw68OW9Hotjea6t4IHqeBWWe&sz=w600" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg');this.remove()"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2h9l5 5v15H6z"/></svg><span class="bdg">Flyer</span><span class="ov">Mở ↗</span></a><div class="ti"><div class="tlb">Bản PNE<button class="cp" data-u="https://drive.google.com/file/d/1Qr2OTAqEJw68OW9Hotjea6t4IHqeBWWe/view" data-n="CBVB_Dieuduong.pdf" title="Sao chép link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg></button></div><div class="fn" title="CBVB_Dieuduong.pdf">CBVB_Dieuduong.pdf</div><div class="tm"><span class="ag r3">3.7 năm</span><span class="dtx">04/11/2022</span></div></div></div><div class="tile"><a class="th" href="https://drive.google.com/file/d/1eJ-J4fraVdNmEWEaZRHjWpgJSCsMarC0/view" target="_blank" rel="noopener" title="CTV_CBVB_Dieuduong.pdf"><img src="https://drive.google.com/thumbnail?id=1eJ-J4fraVdNmEWEaZRHjWpgJSCsMarC0&sz=w600" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg');this.remove()"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2h9l5 5v15H6z"/></svg><span class="bdg">Flyer</span><span class="ov">Mở ↗</span></a><div class="ti"><div class="tlb">Bản CTV<button class="cp" data-u="https://drive.google.com/file/d/1eJ-J4fraVdNmEWEaZRHjWpgJSCsMarC0/view" data-n="CTV_CBVB_Dieuduong.pdf" title="Sao chép link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg></button></div><div class="fn" title="CTV_CBVB_Dieuduong.pdf">CTV_CBVB_Dieuduong.pdf</div><div class="tm"><span class="ag r3">3.7 năm</span><span class="dtx">04/11/2022</span></div></div></div><div class="tile isnone"><div class="th miss"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 2h6v16H9zM7 20h10"/></svg><span class="bdg out">Standee</span></div><div class="ti"><div class="tlb">Standee</div><div class="fn miss2">chưa có file</div><div class="tm"><span class="ag unk">—</span><span class="dtx"></span></div></div></div></div>
+ <p class="note">File in cũ nhất toàn danh mục.</p>
+</article><article class="ct warnc" data-mkt="Đức" data-q="duc azurit hansa doi tac ban chuyen doi vb: link trong sheet cu khong mo duoc, can lam lai. du hoc nghe dhn_azurithansa_2.23.pdf chuyen doi vb  standee  thieu standee tren 3 nam"
+ data-old="41" data-name="azurit hansa" data-std="0">
+ <header><div class="hl"><h3>Azurit Hansa<span class="tag">Đối tác</span></h3>
+ <span class="mkt">Đức</span></div>
+ <span class="pill warn">Thiếu standee</span></header>
+ <div class="tiles"><div class="tile"><a class="th" href="https://drive.google.com/file/d/1j5IaCI6RtPs2boGLGmRHsfKmUcyAanOb/view" target="_blank" rel="noopener" title="DHN_AzuritHansa_2.23.pdf"><img src="https://drive.google.com/thumbnail?id=1j5IaCI6RtPs2boGLGmRHsfKmUcyAanOb&sz=w600" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg');this.remove()"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2h9l5 5v15H6z"/></svg><span class="bdg">Flyer</span><span class="ov">Mở ↗</span></a><div class="ti"><div class="tlb">Du học nghề<button class="cp" data-u="https://drive.google.com/file/d/1j5IaCI6RtPs2boGLGmRHsfKmUcyAanOb/view" data-n="DHN_AzuritHansa_2.23.pdf" title="Sao chép link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg></button></div><div class="fn" title="DHN_AzuritHansa_2.23.pdf">DHN_AzuritHansa_2.23.pdf</div><div class="tm"><span class="ag r3">3.4 năm</span><span class="dtx">20/02/2023</span></div></div></div><div class="tile isnone"><div class="th miss"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2h9l5 5v15H6z"/></svg><span class="bdg out">Flyer</span></div><div class="ti"><div class="tlb">Chuyển đổi VB</div><div class="fn miss2">chưa có file</div><div class="tm"><span class="ag unk">—</span><span class="dtx"></span></div></div></div><div class="tile isnone"><div class="th miss"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 2h6v16H9zM7 20h10"/></svg><span class="bdg out">Standee</span></div><div class="ti"><div class="tlb">Standee</div><div class="fn miss2">chưa có file</div><div class="tm"><span class="ag unk">—</span><span class="dtx"></span></div></div></div></div>
+ <p class="note">Bản Chuyển đổi VB: link trong sheet cũ không mở được, cần làm lại.</p>
+</article><article class="ct warnc" data-mkt="Đức" data-q="duc buhmann doi tac doi tac chuong trinh duc, cung nhom voi azurit hansa. flyer flyerctbuhmann.pdf standee  thieu standee"
+ data-old="20" data-name="buhmann" data-std="0">
+ <header><div class="hl"><h3>Buhmann<span class="tag">Đối tác</span></h3>
+ <span class="mkt">Đức</span></div>
+ <span class="pill warn">Thiếu standee</span></header>
+ <div class="tiles"><div class="tile"><a class="th" href="https://drive.google.com/file/d/1JPJmxpRgYSxUTXfB-JcMEHuDotR9zbJh/view" target="_blank" rel="noopener" title="FlyerCTBuhMann.pdf"><img src="https://drive.google.com/thumbnail?id=1JPJmxpRgYSxUTXfB-JcMEHuDotR9zbJh&sz=w600" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg');this.remove()"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2h9l5 5v15H6z"/></svg><span class="bdg">Flyer</span><span class="ov">Mở ↗</span></a><div class="ti"><div class="tlb">Flyer<button class="cp" data-u="https://drive.google.com/file/d/1JPJmxpRgYSxUTXfB-JcMEHuDotR9zbJh/view" data-n="FlyerCTBuhMann.pdf" title="Sao chép link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg></button></div><div class="fn" title="FlyerCTBuhMann.pdf">FlyerCTBuhMann.pdf</div><div class="tm"><span class="ag r1">1.7 năm</span><span class="dtx">11/11/2024</span></div></div></div><div class="tile isnone"><div class="th miss"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 2h6v16H9zM7 20h10"/></svg><span class="bdg out">Standee</span></div><div class="ti"><div class="tlb">Standee</div><div class="fn miss2">chưa có file</div><div class="tm"><span class="ag unk">—</span><span class="dtx"></span></div></div></div></div>
+ <p class="note">Đối tác chương trình Đức, cùng nhóm với Azurit Hansa.</p>
+</article><article class="ct warnc" data-mkt="Đức" data-q="duc dai hoc duc   flyer flyer dhd thang 1 206.pdf standee  thieu standee"
+ data-old="3" data-name="dai hoc duc" data-std="0">
+ <header><div class="hl"><h3>Đại học Đức</h3>
+ <span class="mkt">Đức</span></div>
+ <span class="pill warn">Thiếu standee</span></header>
+ <div class="tiles"><div class="tile"><a class="th" href="https://drive.google.com/file/d/1BdUc1lMlE0z0QRNPOfhllx0kBzYV7OGn/view" target="_blank" rel="noopener" title="Flyer DHĐ tháng 1 206.pdf"><img src="https://drive.google.com/thumbnail?id=1BdUc1lMlE0z0QRNPOfhllx0kBzYV7OGn&sz=w600" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg');this.remove()"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2h9l5 5v15H6z"/></svg><span class="bdg">Flyer</span><span class="ov">Mở ↗</span></a><div class="ti"><div class="tlb">Flyer<button class="cp" data-u="https://drive.google.com/file/d/1BdUc1lMlE0z0QRNPOfhllx0kBzYV7OGn/view" data-n="Flyer DHĐ tháng 1 206.pdf" title="Sao chép link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg></button></div><div class="fn" title="Flyer DHĐ tháng 1 206.pdf">Flyer DHĐ tháng 1 206.pdf</div><div class="tm"><span class="ag ok">3 tháng</span><span class="dtx">13/04/2026</span></div></div></div><div class="tile isnone"><div class="th miss"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 2h6v16H9zM7 20h10"/></svg><span class="bdg out">Standee</span></div><div class="ti"><div class="tlb">Standee</div><div class="fn miss2">chưa có file</div><div class="tm"><span class="ag unk">—</span><span class="dtx"></span></div></div></div></div>
+ 
+</article><article class="ct" data-mkt="Áo" data-q="ao chuyen doi van bang dieu duong  ban 2023 cu van con trong drive: cdvba_13.05 - pne.pdf va chuyen doi vb dieu duong tai ao (dtmay23).pdf. brochure brochure chuyen doi vb dieu duong tai ao (0526).pdf standee 80x200 standee 80x200 cdvb ao 020326.pdf du bo"
+ data-old="4" data-name="chuyen doi van bang dieu duong" data-std="1">
+ <header><div class="hl"><h3>Chuyển đổi văn bằng Điều dưỡng</h3>
+ <span class="mkt">Áo</span></div>
+ <span class="pill ok">Đủ bộ</span></header>
+ <div class="tiles"><div class="tile"><a class="th" href="https://drive.google.com/file/d/1OzNhxi99eyHxqgYNlOFMAWLX8noZ-ZKP/view" target="_blank" rel="noopener" title="Brochure Chuyển đổi VB Điều dưỡng tại Áo (0526).pdf"><img src="https://drive.google.com/thumbnail?id=1OzNhxi99eyHxqgYNlOFMAWLX8noZ-ZKP&sz=w600" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg');this.remove()"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h7v18H4zM13 4h7v18h-7z"/></svg><span class="bdg">Brochure</span><span class="ov">Mở ↗</span></a><div class="ti"><div class="tlb">Brochure<button class="cp" data-u="https://drive.google.com/file/d/1OzNhxi99eyHxqgYNlOFMAWLX8noZ-ZKP/view" data-n="Brochure Chuyển đổi VB Điều dưỡng tại Áo (0526).pdf" title="Sao chép link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg></button></div><div class="fn" title="Brochure Chuyển đổi VB Điều dưỡng tại Áo (0526).pdf">Brochure Chuyển đổi VB Điều dưỡng tại Áo (0526).pdf</div><div class="tm"><span class="ag ok">2 tháng</span><span class="dtx">07/05/2026</span></div></div></div><div class="tile"><a class="th" href="https://drive.google.com/file/d/1wGrB0kiFu4ItX0P9H-raxVdM-ObdZNWn/view" target="_blank" rel="noopener" title="Standee 80x200 CDVB Áo 020326.pdf"><img src="https://drive.google.com/thumbnail?id=1wGrB0kiFu4ItX0P9H-raxVdM-ObdZNWn&sz=w600" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg');this.remove()"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 2h6v16H9zM7 20h10"/></svg><span class="bdg">Standee</span><span class="ov">Mở ↗</span></a><div class="ti"><div class="tlb">Standee 80x200<button class="cp" data-u="https://drive.google.com/file/d/1wGrB0kiFu4ItX0P9H-raxVdM-ObdZNWn/view" data-n="Standee 80x200 CDVB Áo 020326.pdf" title="Sao chép link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg></button></div><div class="fn" title="Standee 80x200 CDVB Áo 020326.pdf">Standee 80x200 CDVB Áo 020326.pdf</div><div class="tm"><span class="ag ok">4 tháng</span><span class="dtx">02/03/2026</span></div></div></div></div>
+ <p class="note">Bản 2023 cũ vẫn còn trong Drive: CDVBA_13.05 - PNE.pdf và Chuyển đổi VB Điều dưỡng tại Áo (DTMay23).pdf.</p>
+</article><article class="ct warnc" data-mkt="Khác" data-q="khac canada   flyer flyer du hoc canada.pdf standee  thieu standee"
+ data-old="29" data-name="canada" data-std="0">
+ <header><div class="hl"><h3>Canada</h3>
+ <span class="mkt">Khác</span></div>
+ <span class="pill warn">Thiếu standee</span></header>
+ <div class="tiles"><div class="tile"><a class="th" href="https://drive.google.com/file/d/1-yyPpqTWs7fPnRLkjs6Iju673wGlqgLO/view" target="_blank" rel="noopener" title="Flyer du học canada.pdf"><img src="https://drive.google.com/thumbnail?id=1-yyPpqTWs7fPnRLkjs6Iju673wGlqgLO&sz=w600" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg');this.remove()"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2h9l5 5v15H6z"/></svg><span class="bdg">Flyer</span><span class="ov">Mở ↗</span></a><div class="ti"><div class="tlb">Flyer<button class="cp" data-u="https://drive.google.com/file/d/1-yyPpqTWs7fPnRLkjs6Iju673wGlqgLO/view" data-n="Flyer du học canada.pdf" title="Sao chép link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg></button></div><div class="fn" title="Flyer du học canada.pdf">Flyer du học canada.pdf</div><div class="tm"><span class="ag r2">2.4 năm</span><span class="dtx">20/02/2024</span></div></div></div><div class="tile isnone"><div class="th miss"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 2h6v16H9zM7 20h10"/></svg><span class="bdg out">Standee</span></div><div class="ti"><div class="tlb">Standee</div><div class="fn miss2">chưa có file</div><div class="tm"><span class="ag unk">—</span><span class="dtx"></span></div></div></div></div>
+ 
+</article></div>
+<div id="none">Không có chương trình nào khớp.</div>
+
+<h2 id="hsnl">Hồ sơ năng lực <span style="text-transform:none;letter-spacing:0;font-weight:400;color:#9aa1ad">— dùng chung, không thuộc chương trình nào</span></h2>
+<div class="hgrid" id="hgrid"><div class="hwrap" data-q="tieng viet ho so nang luc-4.6.24.pdf "><div class="tile"><a class="th" href="https://drive.google.com/file/d/1ZLTcaHP-WAx_RdCL_F7PSsW9rssIwiw9/view" target="_blank" rel="noopener" title="Hồ sơ năng lực-4.6.24.pdf"><img src="https://drive.google.com/thumbnail?id=1ZLTcaHP-WAx_RdCL_F7PSsW9rssIwiw9&sz=w600" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg');this.remove()"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2h9l5 5v15H6z"/></svg><span class="bdg">Flyer</span><span class="ov">Mở ↗</span></a><div class="ti"><div class="tlb">Tiếng Việt<button class="cp" data-u="https://drive.google.com/file/d/1ZLTcaHP-WAx_RdCL_F7PSsW9rssIwiw9/view" data-n="Hồ sơ năng lực-4.6.24.pdf" title="Sao chép link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg></button></div><div class="fn" title="Hồ sơ năng lực-4.6.24.pdf">Hồ sơ năng lực-4.6.24.pdf</div><div class="tm"><span class="ag r2">2.1 năm</span><span class="dtx">04/06/2024</span></div></div></div></div><div class="hwrap" data-q="tieng trung pne profile tq.08.07.26v2.pdf ban doanh nghiep"><div class="tile"><a class="th" href="https://drive.google.com/file/d/105GW427MnscOzlM4dssc3V5vUvBdn4hw/view" target="_blank" rel="noopener" title="PNE Profile TQ.08.07.26v2.pdf"><img src="https://drive.google.com/thumbnail?id=105GW427MnscOzlM4dssc3V5vUvBdn4hw&sz=w600" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg');this.remove()"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2h9l5 5v15H6z"/></svg><span class="bdg">Flyer</span><span class="ov">Mở ↗</span></a><div class="ti"><div class="tlb">Tiếng Trung<button class="cp" data-u="https://drive.google.com/file/d/105GW427MnscOzlM4dssc3V5vUvBdn4hw/view" data-n="PNE Profile TQ.08.07.26v2.pdf" title="Sao chép link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg></button></div><div class="fn" title="PNE Profile TQ.08.07.26v2.pdf">PNE Profile TQ.08.07.26v2.pdf</div><div class="tm"><span class="ag ok">0 tháng</span><span class="dtx">08/07/2026</span></div><div class="tex">Bản doanh nghiệp</div></div></div></div><div class="hwrap" data-q="tieng thai hsnlthai150726v3.pdf "><div class="tile"><a class="th" href="https://drive.google.com/file/d/1CGyvpYjwDNkKMQjc28uqaT9IEu61e59R/view" target="_blank" rel="noopener" title="HSNLThai150726v3.pdf"><img src="https://drive.google.com/thumbnail?id=1CGyvpYjwDNkKMQjc28uqaT9IEu61e59R&sz=w600" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg');this.remove()"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2h9l5 5v15H6z"/></svg><span class="bdg">Flyer</span><span class="ov">Mở ↗</span></a><div class="ti"><div class="tlb">Tiếng Thái<button class="cp" data-u="https://drive.google.com/file/d/1CGyvpYjwDNkKMQjc28uqaT9IEu61e59R/view" data-n="HSNLThai150726v3.pdf" title="Sao chép link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg></button></div><div class="fn" title="HSNLThai150726v3.pdf">HSNLThai150726v3.pdf</div><div class="tm"><span class="ag ok">0 tháng</span><span class="dtx">24/07/2026</span></div></div></div></div><div class="hwrap" data-q="tieng anh thu muc hsnl tieng anh la thu muc, chua gom ve mot file"><div class="tile"><a class="th noimg" href="https://drive.google.com/drive/folders/1tgX0B2vTd8MWUVyNjhPHwMunDXEtae-a" target="_blank" rel="noopener" title="Thư mục HSNL tiếng Anh"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h6l2 2h10v12H3z"/></svg><span class="bdg">Thư mục</span><span class="ov">Mở ↗</span></a><div class="ti"><div class="tlb">Tiếng Anh<button class="cp" data-u="https://drive.google.com/drive/folders/1tgX0B2vTd8MWUVyNjhPHwMunDXEtae-a" data-n="Thư mục HSNL tiếng Anh" title="Sao chép link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg></button></div><div class="fn" title="Thư mục HSNL tiếng Anh">Thư mục HSNL tiếng Anh</div><div class="tm"><span class="ag unk">—</span><span class="dtx"></span></div><div class="tex">Là thư mục, chưa gom về một file</div></div></div></div><div class="hwrap" data-q="ban 2023 ho so nang luc pne (mar23).pdf da co ban 2024 thay the"><div class="tile"><a class="th" href="https://drive.google.com/file/d/147vd06EXFZVU681YiZdSay_EY3FqNAZd/view" target="_blank" rel="noopener" title="HỒ SƠ NĂNG LỰC PNE (Mar23).pdf"><img src="https://drive.google.com/thumbnail?id=147vd06EXFZVU681YiZdSay_EY3FqNAZd&sz=w600" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg');this.remove()"><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2h9l5 5v15H6z"/></svg><span class="bdg">Flyer</span><span class="ov">Mở ↗</span></a><div class="ti"><div class="tlb">Bản 2023<button class="cp" data-u="https://drive.google.com/file/d/147vd06EXFZVU681YiZdSay_EY3FqNAZd/view" data-n="HỒ SƠ NĂNG LỰC PNE (Mar23).pdf" title="Sao chép link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/></svg></button></div><div class="fn" title="HỒ SƠ NĂNG LỰC PNE (Mar23).pdf">HỒ SƠ NĂNG LỰC PNE (Mar23).pdf</div><div class="tm"><span class="ag r2">2.9 năm</span><span class="dtx">21/08/2023</span></div><div class="tex">Đã có bản 2024 thay thế</div></div></div></div></div>
+
+<div class="foot">
+ Tuổi file: <span class="ag r3">≥3 năm</span> <span class="ag r2">2–3 năm</span>
+ <span class="ag r1">1–2 năm</span> <span class="ag ok">&lt;1 năm</span><br>
+ Ảnh preview lấy trực tiếp từ Drive; file nào chưa bật chia sẻ sẽ hiện ô xám thay vì ảnh.
+ Đã bỏ toàn bộ file nén. Hai link trong sheet cũ không mở được: Azurit Hansa bản Chuyển đổi VB và bản 3 logo của Áo.
+</div>
+</div>
+<div id="toast"></div>
+<script>
+var Q=document.getElementById("q"),G=document.getElementById("grid"),N=document.getElementById("none"),
+    H=document.getElementById("hgrid"),HS=document.getElementById("hsnl"),CN=document.getElementById("cnt"),
+    SO=document.getElementById("sort"),T=document.getElementById("toast"),
+    MKT="",FSTD=false,FOLD3=false;
+function fold(s){return s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\u0111/g,"d")}
+var CARDS=[].slice.call(G.children);
+function apply(){
+  var q=fold(Q.value.trim()),n=0;
+  CARDS.forEach(function(c){
+    var ok=(!MKT||c.dataset.mkt===MKT)
+        && (!q||c.dataset.q.indexOf(q)>=0)
+        && (!FSTD||c.dataset.std==="0")
+        && (!FOLD3||(+c.dataset.old)>=36);
+    c.classList.toggle("hide",!ok); if(ok)n++;
+  });
+  N.style.display=n?"none":"block";
+  CN.textContent=n+"/"+CARDS.length+" chương trình";
+  var hv=0;
+  [].forEach.call(H.children,function(r){
+    var ok=!q||r.dataset.q.indexOf(q)>=0;
+    r.classList.toggle("hide",!ok); if(ok)hv++;
+  });
+  var hide=(q&&!hv)||(!q&&(MKT||FSTD||FOLD3));
+  HS.style.display=hide?"none":""; H.style.display=hide?"none":"";
+}
+function sortIt(){
+  var k=SO.value,a=CARDS.slice();
+  if(k==="old") a.sort(function(x,y){return (+y.dataset.old)-(+x.dataset.old)});
+  else if(k==="new") a.sort(function(x,y){return (+x.dataset.old)-(+y.dataset.old)});
+  else if(k==="name") a.sort(function(x,y){return x.dataset.name.localeCompare(y.dataset.name)});
+  else a=CARDS.slice();
+  a.forEach(function(c){G.appendChild(c)});
+}
+Q.addEventListener("input",apply);
+Q.addEventListener("keydown",function(ev){if(ev.key==="Escape"){Q.value="";apply();Q.blur()}});
+document.addEventListener("keydown",function(ev){
+  if(ev.key==="/"&&document.activeElement!==Q&&!/INPUT|SELECT/.test(document.activeElement.tagName)){
+    ev.preventDefault();Q.focus()}
+});
+SO.addEventListener("change",sortIt);
+[].forEach.call(document.querySelectorAll(".nav button"),function(b){
+  b.onclick=function(){
+    if(b.dataset.go){document.getElementById(b.dataset.go).scrollIntoView({block:"start"});return}
+    MKT=b.dataset.f;
+    [].forEach.call(document.querySelectorAll(".nav button[data-f]"),function(x){
+      x.classList.toggle("on",x===b)});
+    apply();
+  };
+});
+document.getElementById("f-std").onclick=function(){FSTD=!FSTD;this.classList.toggle("on",FSTD);apply()};
+document.getElementById("f-old").onclick=function(){FOLD3=!FOLD3;this.classList.toggle("on",FOLD3);apply()};
+var tt;
+function toast(m){T.textContent=m;T.classList.add("on");clearTimeout(tt);
+  tt=setTimeout(function(){T.classList.remove("on")},2100)}
+document.addEventListener("click",function(ev){
+  var b=ev.target.closest(".cp"); if(!b)return;
+  ev.preventDefault();
+  var u=b.dataset.u,n=b.dataset.n||"";
+  function done(){b.classList.add("done");setTimeout(function(){b.classList.remove("done")},1300);
+    toast("Đã sao chép link"+(n?": "+n:""))}
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(u).then(done,fb)
+  } else fb();
+  function fb(){var t=document.createElement("textarea");t.value=u;t.style.position="fixed";
+    t.style.opacity=0;document.body.appendChild(t);t.select();
+    try{document.execCommand("copy");done()}catch(e){toast("Không sao chép được, hãy mở file rồi copy")}
+    document.body.removeChild(t)}
+});
+apply();
+</script>
+</body></html>
